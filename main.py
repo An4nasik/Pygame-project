@@ -29,6 +29,15 @@ if __name__ == '__main__':
             image = image.convert_alpha()
         return image
 fps = 60
+backgrounds = [transform.scale(load_image("background.png"), (500, 500)),
+               transform.scale(load_image("second_background.png"), (500, 500)),
+               transform.scale(load_image("background3.webp"), (500, 500)),
+               transform.scale(load_image("background4.webp"), (500, 500)),
+               transform.scale(load_image("background5.webp"), (500, 500)),
+               transform.scale(load_image("background6.webp"), (500, 500))]
+pygame.mixer.music.load("background.mp3")
+pygame.mixer.music.play(-1)
+pygame.mixer.music.set_volume(0.03)
 MYEVENTTYPE = pygame.USEREVENT + 1
 Enemy_generation_event = pygame.USEREVENT + 2
 pygame.time.set_timer(Enemy_generation_event, 2000)
@@ -37,11 +46,14 @@ clock = pygame.time.Clock()
 all_sprites = pygame.sprite.Group()
 attackers = pygame.sprite.Group()
 hero_group = pygame.sprite.Group()
+baffs = pygame.sprite.Group()
 font.init()
 path = font.match_font("arial")
 Font = font.Font(path, 25)
 GRAVITY = 5
 screen_rect = (0, 0, width, height)
+back = transform.scale(load_image("background.png"), (500, 500))
+
 
 class Particle(pygame.sprite.Sprite):
     # сгенерируем частицы разного размера
@@ -73,21 +85,24 @@ class Particle(pygame.sprite.Sprite):
         if not self.rect.colliderect(screen_rect):
             self.kill()
 
+
 class Live(pygame.sprite.Sprite):
     image = transform.scale(load_image("heart.png"), (30, 30))
+    i = 0
 
-    def __init__(self, i):
-        super().__init__(all_sprites)
+    def __init__(self):
+        super().__init__(hero_group)
         self.image = Live.image
         self.rect = self.image.get_rect()
-        self.rect.x, self.rect.y = 60 - i * 30, 0
+        self.rect.x, self.rect.y = Live.i * 30, 0
+        Live.i = Live.i + 1
 
 
 class Hero(pygame.sprite.Sprite):
     image = transform.scale(load_image("hero.png"), (50, 50))
 
     def __init__(self):
-        super().__init__(all_sprites)
+        super().__init__(hero_group)
         self.image = Hero.image
         self.rect = self.image.get_rect()
         # вычисляем маску для эффективного сравнения
@@ -101,6 +116,9 @@ class Enemy(sprite.Sprite):
     lives = 5
     image = transform.scale(load_image("fireball.png"), (20, 20))
     score = 0
+    ticks = fps - 10
+    back_index = 0
+    reward = 10
 
     def __init__(self):
         super().__init__(attackers)
@@ -108,15 +126,15 @@ class Enemy(sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect()
         z = True
-        self.lives = 5
-        self.ticks = fps - 10
+        self.lives = Enemy.lives
+        self.ticks = Enemy.ticks
         self.go = False
         i = 0
         if len(attackers) >= 2:
             while z:
                 marks = [True]
-                self.rect.x = random.randrange(width)
-                self.rect.y = random.randrange(height)
+                self.rect.x = random.randrange(width - 30)
+                self.rect.y = random.randrange(height - 30)
                 if self.rect.x in range(sprite.rect.x - 100, sprite.rect.x + 100) and self.rect.y in range(
                         sprite.rect.y - 100, sprite.rect.y + 100):
                     marks.append(False)
@@ -145,14 +163,20 @@ class Enemy(sprite.Sprite):
                 self.kill()
                 if len(all_sprites) == 0:
                     pygame.quit()
-                for x in all_sprites:
-                    x.kill()
-                    break
+                all_sprites.sprites()[-1].kill()
+                Live.i = Live.i - 1
 
     def click(self):
         self.lives -= 1
         if self.lives <= 0:
-            Enemy.score = Enemy.score + 10
+            Enemy.score = Enemy.score + Enemy.reward
+            if Enemy.score % 100 == 0 and Enemy.score != 0:
+                global backgrounds, back
+                Enemy.back_index = Enemy.back_index + 1
+                if Enemy.back_index != len(backgrounds) - 1:
+                    back = backgrounds[Enemy.back_index]
+                Enemy.ticks = Enemy.ticks * 0.8
+                Enemy.lives = Enemy.lives + 1
             create_particles((self.rect.x, self.rect.y))
             self.kill()
 
@@ -164,6 +188,7 @@ class Enemy(sprite.Sprite):
     def hide(self):
         self.image.fill((255, 255, 255))
 
+
 def create_particles(position):
     # количество создаваемых частиц
     particle_count = 20
@@ -172,18 +197,108 @@ def create_particles(position):
     for _ in range(particle_count):
         Particle(position, random.choice(numbers), random.choice(numbers))
 
+
+class attack_baff(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__(baffs)
+        image = transform.scale(load_image("attack_baff.png"), (30, 30))
+        self.image = image
+        self.mask = pygame.mask.from_surface(self.image)
+        self.rect = self.image.get_rect()
+        self.rect.x = random.randrange(100, width - 30)
+        self.rect.y = 0
+
+    def update(self, *args, **kwargs):
+        self.rect.y = self.rect.y + 10
+        if self.rect.y > 500:
+            self.kill()
+
+    def click(self):
+        Enemy.lives = Enemy.lives - 1
+        self.kill()
+
+
+class health_up(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__(baffs)
+        image = transform.scale(load_image("health_up.png"), (40, 30))
+        self.image = image
+        self.mask = pygame.mask.from_surface(self.image)
+        self.rect = self.image.get_rect()
+        self.rect.x = random.randrange(100, width - 30)
+        self.rect.y = 0
+
+    def update(self, *args, **kwargs):
+        self.rect.y = self.rect.y + 10
+        if self.rect.y > 500:
+            self.kill()
+
+    def click(self):
+        all_sprites.add(Live())
+        self.kill()
+
+
+class slow_baff(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__(baffs)
+        image = transform.scale(load_image("slow.png"), (40, 30))
+        self.image = image
+        self.mask = pygame.mask.from_surface(self.image)
+        self.rect = self.image.get_rect()
+        self.rect.x = random.randrange(100, width - 30)
+        self.rect.y = 0
+
+    def update(self, *args, **kwargs):
+        self.rect.y = self.rect.y + 10
+        if self.rect.y > 500:
+            self.kill()
+
+    def click(self):
+        Enemy.ticks = Enemy.ticks * 1.2
+        self.kill()
+
+class multiplicator(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__(baffs)
+        image = transform.scale(load_image("multi.png"), (30, 30))
+        self.image = image
+        self.mask = pygame.mask.from_surface(self.image)
+        self.rect = self.image.get_rect()
+        self.rect.x = random.randrange(100, width - 30)
+        self.rect.y = 0
+
+    def update(self, *args, **kwargs):
+        self.rect.y = self.rect.y + 10
+        if self.rect.y > 500:
+            self.kill()
+
+    def click(self):
+        Enemy.reward = Enemy.reward * 2
+        self.kill()
+        global lst_of_baffs
+        lst_of_baffs.pop(lst_of_baffs.index(multiplicator))
+
 for i in range(3):
-    all_sprites.add(Live(i))
+    all_sprites.add(Live())
+
+lst_of_baffs = [attack_baff, health_up, slow_baff, multiplicator]
 sprite = Hero()
 hero_group.add(sprite)
 all_sprites.draw(screen)
 pygame.display.flip()
+last_score = 0
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
         if event.type == MYEVENTTYPE:
             screen.fill((255, 255, 255))
+            screen.blit(back, (0, 0))
+            if Enemy.score % 100 == 0 and Enemy.score != last_score:
+                baffs.add(random.choice(lst_of_baffs)())
+                last_score = Enemy.score
+            baffs.draw(screen)
+            baffs.update()
             all_sprites.draw(screen)
             all_sprites.update()
             attackers.draw(screen)
@@ -204,6 +319,11 @@ while running:
                 cor_x = event.pos[0]
                 cor_y = event.pos[1]
                 if cor_x in range(x.rect.x, x.rect.x + 20) and cor_y in range(x.rect.y, x.rect.y + 20):
+                    x.click()
+            for x in baffs:
+                cor_x = event.pos[0]
+                cor_y = event.pos[1]
+                if cor_x in range(x.rect.x, x.rect.x + 30) and cor_y in range(x.rect.y, x.rect.y + 30):
                     x.click()
         if event.type == Enemy_generation_event:
             attackers.add(Enemy())
