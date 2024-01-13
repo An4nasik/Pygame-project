@@ -11,10 +11,10 @@
   <br> За каждые 100 очков, будут появлятся случайные усиления, кликнув на которое, вы его получите.
   <br> Список усилений:
   <ol> 
-    <li>Атаки - увеличивает урон по шарам на 1 <img scr="https://github.com/An4nasik/Pygame-project/blob/main/data/attack_baff.png"></li>
-    <li>Здоровья - увеличивает число жизней на 1</li>
-    <li>Замедление - увеличивает время до атаки каждого шара на 20%</li>
-    <li>Мультипликатор - увеличивает получаемые очки в 2 раза</li>
+    <li>Атаки - увеличивает урон по шарам на 1 <img widht="20px" height="20px" src="https://github.com/An4nasik/Pygame-project/blob/main/data/attack_baff.png"></li>
+    <li>Здоровья - увеличивает число жизней на 1 <img widht="20px" height="20px" src="https://github.com/An4nasik/Pygame-project/blob/main/data/health_up.png"></li>
+    <li>Замедление - увеличивает время до атаки каждого шара на 20% <img widht="30px" height="30px" src="https://github.com/An4nasik/Pygame-project/blob/main/data/slow.png"></li>
+    <li>Мультипликатор - увеличивает получаемые очки в 2 раза <img widht="20px" height="20px" src="https://github.com/An4nasik/Pygame-project/blob/main/data/multi.png"></li>
   </ol>
 <p>
 <h2>Важная информация!</h2>
