@@ -21,3 +21,4 @@
 <h3>Чтобы приложение работало, необходимо наличие папки <a href="https://github.com/An4nasik/Pygame-project/tree/main/data">data</a> и файла <a href="https://github.com/An4nasik/Pygame-project/blob/main/background.mp3"> background.mp3 </a> в одной папке с исполняемым файлом 
 <br> <a href="https://disk.yandex.ru/d/dLCm9DKH__QKNw"> Тот самы исполняемый файл</a> 
 </h3>
+<p>Для лучшего ознакомления с функционалом проекта, рекомендуется прочитать пунк 4 из раздела "Интересные факты" из презентации</p>
